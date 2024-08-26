@@ -3,28 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rice Plant Disease Detection</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Skynap</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url(https://c7.alamy.com/comp/2JFDE1K/smart-farming-cartoon-composition-of-farm-outdoor-landscape-with-barn-hothouse-flying-drone-and-wind-turbine-vector-illustration-2JFDE1K.jpg) no-repeat center center fixed;
+            background-size: cover;
+            overflow-x: hidden;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        .header img {
+            max-width: 100px;
+        }
+        .header h1 {
+            margin: 10px 0 0;
+            font-size: 2em;
+            color: #333;
+        }
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 3;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #4CAF50, #9CCC65);
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 1.2em;
+            color: #ffffff;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+        #main {
+            transition: margin-left .5s;
+            padding: 16px;
+        }
+        .openbtn {
+            font-size: 1.5em;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+        }
+        .openbtn:hover {
+            background-color: #45a049;
+        }
+        .prediction-results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .prediction-results img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+        .prediction-results h2 {
+            margin-top: 0;
+        }
+        .prediction-results p {
+            font-size: 1.1em;
+            color: #333;
+        }
+    </style>
+    <!-- Load Teachable Machine Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1><i class="fas fa-seedling"></i> Rice Plant Disease Detection</h1>
-        <div class="upload-section">
-            <label for="imageUpload" class="upload-label">
-                <i class="fas fa-upload"></i> Choose an Image
-            </label>
-            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
-        </div>
-        <button id="detectButton"><i class="fas fa-search"></i> Detect Disease</button>
-        <img id="previewImage" src="" alt="Image Preview" style="display: none;">
-        <div id="result" style="display: none;">
-            <h2><i class="fas fa-diagnoses"></i> Result:</h2>
-            <p id="diseaseName"></p>
-            <h3><i class="fas fa-prescription-bottle-alt"></i> Recommended Treatment:</h3>
-            <p id="treatment"></p>
-        </div>
+
+    <div class="header">
+        <img src="https://thumbs.dreamstime.com/b/immerse-yourself-world-imagination-as-lively-cartoon-drone-takes-flight-against-pristine-white-background-image-ai-297729880.jpg" alt="Drone">
+        <h1>Skynap</h1>
+        <button class="openbtn" onclick="openNav()">☰ Menu</button>
     </div>
-    <script src="script.js"></script>
+
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+        <a href="#" onclick="goToRiceFieldStatus()">Kalagayan ng Palayan</a>
+        <a href="pest_detection.html">Pagtuklas ng Peste</a>
+        <a href="disease_detection.html">Pagtuklas ng Sakit</a>
+        <a href="library.html">Aklatan ng mga Peste at Sakit</a>
+    </div>
+
+    <div id="main">
+        <!-- Main content here -->
+    </div>
+
+    <script>
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+        }
+
+        function goToRiceFieldStatus() {
+            const statusPageHtml = `
+                <div class="main-buttons">
+                    <button onclick="openLwFly()">Drone Vision</button>
+                    <button onclick="classifyImage()">I-classify ang Imahe</button>
+                </div>
+            `;
+            document.getElementById("main").innerHTML = statusPageHtml;
+            closeNav();
+        }
+
+        function openLwFly() {
+            // Android-specific code to open LW Fly app
+            window.location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.yourpackage.lwfly;end";
+        }
+
+        async function classifyImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const image = document.createElement('img');
+                    image.src = URL.createObjectURL(file);
+                    const resultsDiv = document.createElement('div');
+                    resultsDiv.className = 'prediction-results';
+                    resultsDiv.innerHTML = `<img src="${image.src}" alt="Uploaded Image"><h2>Mga Prediksyon</h2>`;
+                    document.getElementById("main").appendChild(resultsDiv);
+
+                    // Load the model for ripeness
+                    const ripenessModelURL = 'https://teachablemachine.withgoogle.com/models/bo4w33h6o/model.json';
+                    const ripenessModel = await tmImage.load(ripenessModelURL);
+                    const ripenessPrediction = await ripenessModel.predict(image);
+
+                    // Load the model for field status
+                    const statusModelURL = 'https://teachablemachine.withgoogle.com/models/3R2HPGq8E/model.json';
+                    const statusModel = await tmImage.load(statusModelURL);
+                    const statusPrediction = await statusModel.predict(image);
+
+                    // Display the predictions
+                    let ripenessResults = `<h3>Hinog</h3>`;
+                    ripenessPrediction.forEach(prediction => {
+                        ripenessResults += `<p>${prediction.className}: ${(prediction.probability * 100).toFixed(2)}%</p>`;
+                    });
+
+                    let statusResults = `<h3>Kalagayan ng Palayan</h3>`;
+                    statusPrediction.forEach(prediction => {
+                        statusResults += `<p>${prediction.className}: ${(prediction.probability * 100).toFixed(2)}%</p>`;
+                    });
+
+                    resultsDiv.innerHTML += ripenessResults + statusResults;
+                }
+            };
+            input.click();
+        }
+    </script>
+
 </body>
 </html>
